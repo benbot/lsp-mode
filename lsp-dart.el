@@ -57,12 +57,19 @@ imported into the current file. Defaults to true"
   :group 'lsp-dart
   :package-version '(lsp-mode . "6.2"))
 
-(defun lsp-dart--server-command ()
+(defun lsp-dart-analysis-server--server-command ()
   "Generate LSP startup command."
   (or
    lsp-dart-server-command
    `(,(expand-file-name (f-join lsp-dart-sdk-dir "bin/dart"))
      ,(expand-file-name (f-join lsp-dart-sdk-dir "bin/snapshots/analysis_server.dart.snapshot"))
+     "--lsp")))
+
+(defun lsp-dart-lsp--server-command ()
+  "Generate LSP startup command."
+  (or
+   lsp-dart-server-command
+   `(,(expand-file-name (f-join lsp-dart-sdk-dir "bin/dart"))
      "--lsp")))
 
 (lsp-register-client
@@ -71,6 +78,17 @@ imported into the current file. Defaults to true"
                    'lsp-dart--server-command)
                   :major-modes '(dart-mode)
                   :priority -1
+                  :initialization-options
+                  `((onlyAnalyzeProjectsWithOpenFiles . ,lsp-dart-only-analyze-projects-with-open-files)
+                    (suggestFromUnimportedLibraries . ,lsp-dart-suggest-from-unimported-libraries))
+                  :server-id 'dart_lsp_server))
+
+(lsp-register-client
+ (make-lsp-client :new-connection
+                  (lsp-stdio-connection
+                   'lsp-dart-analysis-server--server-command)
+                  :major-modes '(dart-mode)
+                  :priority -2
                   :initialization-options
                   `((onlyAnalyzeProjectsWithOpenFiles . ,lsp-dart-only-analyze-projects-with-open-files)
                     (suggestFromUnimportedLibraries . ,lsp-dart-suggest-from-unimported-libraries))
